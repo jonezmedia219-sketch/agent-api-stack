@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.agent_discovery import router as agent_discovery_router
 from app.api.health import router as health_router
 from app.api.root import router as root_router
 from app.api.v1.lead_extract import router as lead_extract_router
@@ -54,6 +55,7 @@ app.add_middleware(MeteringMiddleware)
 app.add_middleware(PaymentStubMiddleware)
 
 app.include_router(root_router)
+app.include_router(agent_discovery_router)
 app.include_router(health_router)
 app.include_router(structured_web_router)
 app.include_router(lead_extract_router)
