@@ -25,6 +25,8 @@ class PaymentRequiredError(AppError):
         chain: str | None = None,
         token: str | None = None,
         receiver_wallet: str | None = None,
+        payment_format: str | None = None,
+        reason: str | None = None,
     ):
         super().__init__(code="PAYMENT_REQUIRED", message=message, status_code=402)
         self.pricing_id = pricing_id
@@ -32,3 +34,5 @@ class PaymentRequiredError(AppError):
         self.chain = chain
         self.token = token
         self.receiver_wallet = receiver_wallet
+        self.payment_format = payment_format
+        self.reason = reason or "payment_required"

@@ -46,4 +46,6 @@ async def enforce_payment(
             chain=decision.chain,
             token=decision.token,
             receiver_wallet=decision.receiver_wallet,
+            payment_format=decision.proof_format or "base-usdc-onchain-v1",
+            reason=decision.reason or "payment_required",
         )

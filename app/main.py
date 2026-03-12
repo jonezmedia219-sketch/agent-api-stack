@@ -65,6 +65,7 @@ async def app_error_handler(request: Request, exc: AppError):
     request_id = getattr(request.state, "request_id", "unknown")
     meta = None
     payment = None
+    details = None
     if isinstance(exc, PaymentRequiredError):
         meta = {"pricing_id": exc.pricing_id, "payment_mode": exc.payment_mode}
         payment = {
@@ -72,10 +73,12 @@ async def app_error_handler(request: Request, exc: AppError):
             "token": exc.token,
             "receiver_wallet": exc.receiver_wallet,
             "payment_mode": exc.payment_mode,
+            "payment_format": exc.payment_format,
         }
+        details = {"reason": exc.reason or "payment_required"}
     return JSONResponse(
         status_code=exc.status_code,
-        content=build_error(code=exc.code, message=exc.message, request_id=request_id, meta=meta, payment=payment),
+        content=build_error(code=exc.code, message=exc.message, request_id=request_id, meta=meta, payment=payment, details=details),
     )
 
 

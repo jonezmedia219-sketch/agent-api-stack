@@ -10,4 +10,7 @@ def test_x_payment_prof_alias_is_accepted_for_onchain_proof(client):
     )
 
     assert response.status_code == 402
-    assert response.json()["error"]["code"] == "PAYMENT_REQUIRED"
+    body = response.json()
+    assert body["error"]["code"] == "PAYMENT_REQUIRED"
+    assert body["error"]["details"]["reason"] == "malformed_payment_proof"
+    assert body["payment"]["payment_format"] == "base-usdc-onchain-v1"
