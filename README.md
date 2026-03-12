@@ -23,6 +23,15 @@ It also includes a shared monetization-ready billing abstraction for:
 - `POST /api/v1/lead-extract`
 - `GET /api/v1/search`
 - `GET /docs`
+- `GET /pricing`
+- `GET /payment/schema`
+
+## Developer docs and discovery
+
+- Interactive API docs: `/docs`
+- Pricing discovery: `/pricing`
+- Payment schema discovery: `/payment/schema`
+- Integration guide: `docs/integration-payments.md`
 
 ## What the Structured Web Data API returns
 
