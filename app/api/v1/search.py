@@ -2,6 +2,7 @@ from time import perf_counter
 
 from fastapi import APIRouter, Query, Request
 
+from app.billing.enforcement import enforce_payment
 from app.billing.helpers import build_usage_context
 from app.billing.usage import record_usage
 from app.core.response_builders import build_success
@@ -18,6 +19,7 @@ async def search_endpoint(
     source: str | None = Query(None),
 ) -> dict:
     started = perf_counter()
+    await enforce_payment(request, endpoint="search.query", usage_context={"query": q, "limit": limit, "source": source or "all"})
     data = await search(query=q, limit=limit, source=source)
     duration_ms = round((perf_counter() - started) * 1000, 2)
     usage_context = build_usage_context(

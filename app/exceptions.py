@@ -14,3 +14,21 @@ class FetchError(AppError):
 class ValidationError(AppError):
     def __init__(self, message: str = "Invalid request."):
         super().__init__(code="VALIDATION_ERROR", message=message, status_code=422)
+
+
+class PaymentRequiredError(AppError):
+    def __init__(
+        self,
+        message: str = "Payment is required before this request can be processed.",
+        pricing_id: str | None = None,
+        payment_mode: str | None = None,
+        chain: str | None = None,
+        token: str | None = None,
+        receiver_wallet: str | None = None,
+    ):
+        super().__init__(code="PAYMENT_REQUIRED", message=message, status_code=402)
+        self.pricing_id = pricing_id
+        self.payment_mode = payment_mode
+        self.chain = chain
+        self.token = token
+        self.receiver_wallet = receiver_wallet

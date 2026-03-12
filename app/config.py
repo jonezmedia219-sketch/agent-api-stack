@@ -25,6 +25,8 @@ class Settings(BaseSettings):
 
     enable_metering: bool = True
     enable_payment_enforcement: bool = False
+    payment_shadow_mode: bool = True
+    payment_verifier: str = "stub"
 
     model_config = SettingsConfigDict(
         env_file=".env",

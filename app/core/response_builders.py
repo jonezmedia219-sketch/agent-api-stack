@@ -13,8 +13,8 @@ def build_success(*, data: Any, request_id: str, api: str, version: str = "v1", 
     return {"ok": True, "data": data, "meta": meta}
 
 
-def build_error(*, code: str, message: str, request_id: str) -> dict:
-    return {
+def build_error(*, code: str, message: str, request_id: str, meta: dict | None = None, payment: dict | None = None) -> dict:
+    payload = {
         "ok": False,
         "error": {
             "code": code,
@@ -24,3 +24,8 @@ def build_error(*, code: str, message: str, request_id: str) -> dict:
             "request_id": request_id,
         },
     }
+    if meta:
+        payload["meta"].update(meta)
+    if payment:
+        payload["payment"] = payment
+    return payload

@@ -8,6 +8,8 @@ from app.main import app
 
 @pytest.fixture()
 def client() -> TestClient:
+    app.state.payment_shadow_mode = True
+    app.state.payment_hard_enforcement = False
     return TestClient(app)
 
 

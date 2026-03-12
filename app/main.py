@@ -11,7 +11,7 @@ from app.api.v1.search import router as search_router
 from app.api.v1.structured_web import router as structured_web_router
 from app.config import get_settings
 from app.core.response_builders import build_error
-from app.exceptions import AppError
+from app.exceptions import AppError, PaymentRequiredError
 from app.logging import configure_logging
 from app.middleware.access_log import AccessLogMiddleware
 from app.middleware.metering import MeteringMiddleware
@@ -29,6 +29,9 @@ app = FastAPI(
     version=settings.app_version,
     docs_url="/docs",
 )
+app.state.payment_hard_enforcement = settings.enable_payment_enforcement
+app.state.payment_shadow_mode = settings.payment_shadow_mode
+app.state.payment_verifier = settings.payment_verifier
 
 allowed_origins = [origin.strip() for origin in settings.cors_allow_origins.split(",") if origin.strip()]
 if allowed_origins:
@@ -56,9 +59,19 @@ app.include_router(search_router)
 @app.exception_handler(AppError)
 async def app_error_handler(request: Request, exc: AppError):
     request_id = getattr(request.state, "request_id", "unknown")
+    meta = None
+    payment = None
+    if isinstance(exc, PaymentRequiredError):
+        meta = {"pricing_id": exc.pricing_id, "payment_mode": exc.payment_mode}
+        payment = {
+            "chain": exc.chain,
+            "token": exc.token,
+            "receiver_wallet": exc.receiver_wallet,
+            "payment_mode": exc.payment_mode,
+        }
     return JSONResponse(
         status_code=exc.status_code,
-        content=build_error(code=exc.code, message=exc.message, request_id=request_id),
+        content=build_error(code=exc.code, message=exc.message, request_id=request_id, meta=meta, payment=payment),
     )
 
 

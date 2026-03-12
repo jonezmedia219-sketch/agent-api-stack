@@ -13,6 +13,7 @@ It also includes a shared monetization-ready billing abstraction for:
 - usage recording
 - request usage context
 - payment verification hooks
+- payment policy + enforcement scaffolding
 
 ## API endpoints
 
@@ -245,11 +246,26 @@ This repo now includes a shared billing abstraction layer for:
 - request usage context
 - structured usage event emission
 - payment verification hooks
+- payment policy registry
+- payment enforcement helper
+- stub verifier for safe rollout
 
-Endpoint handlers no longer emit raw usage events directly. They build a lightweight request usage context and call a single shared helper:
+Endpoint handlers no longer emit raw usage events directly. They build a lightweight request usage context and call a single shared helper for metering:
 
 ```python
 record_usage("search.query", usage_context)
 ```
 
-That keeps endpoint code clean while preserving a clean seam for x402 or another per-request payment layer later.
+Payment enforcement is kept outside endpoint business logic through a shared helper:
+
+```python
+await enforce_payment(request, endpoint="lead_extract.url")
+```
+
+Current rollout mode is safe by default:
+- free endpoints always pass
+- paid-capable endpoints can run in shadow mode first
+- hard enforcement can be enabled later for selected endpoints
+- structured HTTP 402 responses are ready for unpaid paid requests
+
+This preserves a clean seam for x402-compatible verification or prepaid credits later.
