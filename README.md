@@ -267,5 +267,34 @@ Current rollout mode is safe by default:
 - paid-capable endpoints can run in shadow mode first
 - hard enforcement can be enabled later for selected endpoints
 - structured HTTP 402 responses are ready for unpaid paid requests
+- verifier can be switched between `stub` and `x402`
 
-This preserves a clean seam for x402-compatible verification or prepaid credits later.
+For paid requests, verifier mode can now be one of:
+- `stub`
+- `x402`
+- `base_usdc_onchain`
+
+Exact onchain verifier request headers:
+- `X-Payment-Format: base-usdc-onchain-v1`
+- `X-Payment-Proof: <base64url-encoded-json>`
+
+Exact x402-style signed-proof headers:
+- `X-Payment-Format: x402-base-usdc-v1`
+- `X-Payment-Proof: <base64url-encoded-json>`
+
+Backward compatibility currently accepted:
+- `X-Payment-Prof` is temporarily accepted in code
+- canonical public header name is `X-Payment-Proof`
+
+Exact onchain verifier env vars:
+- `PAYMENT_VERIFIER=base_usdc_onchain`
+- `PAYMENT_RECEIVER_WALLET=0xa850773dDdAc7051c9434E3b1e804531C12d265c`
+- `BASE_RPC_URL=https://mainnet.base.org`
+- `PAYMENT_TOKEN_CONTRACT=0x833589fCD6EDB6E08f4c7C32D4f71b54bdA02913`
+- `PAYMENT_MIN_CONFIRMATIONS=1`
+
+Backward compatibility currently accepted:
+- `PAYMENT_RECEIVER_WALET` is temporarily accepted in config
+- canonical env var name is `PAYMENT_RECEIVER_WALLET`
+
+This preserves a clean seam for real onchain verification, x402-compatible attestation flows, or prepaid credits later.

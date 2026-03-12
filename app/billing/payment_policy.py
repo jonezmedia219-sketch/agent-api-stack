@@ -21,19 +21,21 @@ PAYMENT_POLICIES = {
         "pricing_id": "lead_extract.url",
         "payment_required": True,
         "payment_mode": "per_request",
-        "verifier": "stub",
+        "verifier": "x402",
         "chain": "base",
         "token": "USDC",
         "receiver_wallet": "0xa850773dDdAc7051c9434E3b1e804531C12d265c",
+        "amount": "0.01",
     },
     "lead_extract.html": {
         "pricing_id": "lead_extract.html",
         "payment_required": True,
         "payment_mode": "per_request",
-        "verifier": "stub",
+        "verifier": "x402",
         "chain": "base",
         "token": "USDC",
         "receiver_wallet": "0xa850773dDdAc7051c9434E3b1e804531C12d265c",
+        "amount": "0.01",
     },
 }
 

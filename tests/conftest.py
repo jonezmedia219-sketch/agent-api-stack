@@ -10,6 +10,7 @@ from app.main import app
 def client() -> TestClient:
     app.state.payment_shadow_mode = True
     app.state.payment_hard_enforcement = False
+    app.state.payment_verifier = "stub"
     return TestClient(app)
 
 

@@ -36,3 +36,21 @@ services:
         value: true
       - key: PAYMENT_VERIFIER
         value: stub
+      - key: PAYMENT_CHAIN
+        value: base
+      - key: PAYMENT_TOKEN
+        value: USDC
+      - key: PAYMENT_RECEIVER_WALLET
+        value: 0xa850773dDdAc7051c9434E3b1e804531C12d265c
+      - key: PAYMENT_MAX_SKEW_SECONDS
+        value: 300
+      - key: PAYMENT_REQUIRE_NONCE
+        value: true
+      - key: PAYMENT_SHARED_SECRET
+        sync: false
+      - key: BASE_RPC_URL
+        value: https://mainnet.base.org
+      - key: PAYMENT_TOKEN_CONTRACT
+        value: 0x833589fCD6EDB6E08f4c7C32D4f71b54bdA02913
+      - key: PAYMENT_MIN_CONFIRMATIONS
+        value: 1

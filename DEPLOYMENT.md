@@ -84,6 +84,21 @@ Minimum useful production variables:
 Optional:
 - `CORS_ALLOW_ORIGINS=https://agent.example.com,https://app.example.com`
 
+Onchain payment verifier variables (do not enable until ready):
+- `PAYMENT_VERIFIER=base_usdc_onchain`
+- `PAYMENT_RECEIVER_WALLET=0xa850773dDdAc7051c9434E3b1e804531C12d265c`
+- `BASE_RPC_URL=https://mainnet.base.org`
+- `PAYMENT_TOKEN_CONTRACT=0x833589fCD6EDB6E08f4c7C32D4f71b54bdA02913`
+- `PAYMENT_MIN_CONFIRMATIONS=1`
+
+Backward compatibility currently accepted:
+- request header alias: `X-Payment-Prof`
+- env var alias: `PAYMENT_RECEIVER_WALET`
+
+Canonical names for production use:
+- `X-Payment-Proof`
+- `PAYMENT_RECEIVER_WALLET`
+
 ## Render deployment steps
 
 ### Option A: Deploy directly from GitHub repo
@@ -199,6 +214,15 @@ curl -X POST https://api.yourdomain.com/api/v1/structured-web/extract \
 curl -X POST https://api.yourdomain.com/api/v1/lead-extract \
   -H "Content-Type: application/json" \
   -d '{"url":"https://example.com/contact"}'
+```
+
+### Lead Extraction API with real onchain payment headers
+```bash
+curl -X POST https://api.yourdomain.com/api/v1/lead-extract \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Format: base-usdc-onchain-v1" \
+  -H "X-Payment-Proof: <base64url-encoded-json>" \
+  -d '{"html":"<html><body><h1>Acme</h1><p>Email hello@acme.com</p></body></html>","source_url":"https://acme.com"}'
 ```
 
 ### Search API

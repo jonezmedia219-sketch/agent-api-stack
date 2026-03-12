@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +28,18 @@ class Settings(BaseSettings):
     enable_payment_enforcement: bool = False
     payment_shadow_mode: bool = True
     payment_verifier: str = "stub"
+    payment_chain: str = "base"
+    payment_token: str = "USDC"
+    payment_receiver_wallet: str = Field(
+        default="0xa850773dDdAc7051c9434E3b1e804531C12d265c",
+        validation_alias=AliasChoices("PAYMENT_RECEIVER_WALLET", "PAYMENT_RECEIVER_WALET"),
+    )
+    payment_max_skew_seconds: int = 300
+    payment_require_nonce: bool = True
+    payment_shared_secret: str = "change-me-before-production"
+    base_rpc_url: str = "https://mainnet.base.org"
+    payment_token_contract: str = "0x833589fCD6EDB6E08f4c7C32D4f71b54bdA02913"
+    payment_min_confirmations: int = 1
 
     model_config = SettingsConfigDict(
         env_file=".env",
