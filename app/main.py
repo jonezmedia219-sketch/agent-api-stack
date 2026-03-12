@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.health import router as health_router
+from app.api.root import router as root_router
 from app.api.v1.lead_extract import router as lead_extract_router
 from app.api.v1.payment import router as payment_router
 from app.api.v1.pricing import router as pricing_router
@@ -52,6 +53,7 @@ app.add_middleware(AccessLogMiddleware)
 app.add_middleware(MeteringMiddleware)
 app.add_middleware(PaymentStubMiddleware)
 
+app.include_router(root_router)
 app.include_router(health_router)
 app.include_router(structured_web_router)
 app.include_router(lead_extract_router)
