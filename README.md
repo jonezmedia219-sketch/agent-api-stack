@@ -2,6 +2,8 @@
 
 Agent-ready API stack with free tools, paid lead extraction, onchain Base USDC verification, and machine-readable pricing/payment discovery.
 
+Live API: https://agent-api-stack.onrender.com/docs
+
 ## Try it now
 
 - Service discovery: GET /
