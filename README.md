@@ -1,6 +1,22 @@
-# Agent API Stack
+# Agent-api-stack
 
-A small, modular FastAPI monorepo for agent-friendly infrastructure APIs.
+Agent-ready API stack with free tools, paid lead extraction, onchain Base USDC verification, and machine-readable pricing/payment discovery.
+
+## Try it now
+
+- Service discovery: GET /
+- Interactive docs: /docs
+- Pricing discovery: /pricing
+- Payment schema: /payment/schema
+
+Free endpoints:
+- GET /api/v1/search
+- POST /api/v1/structured-web/extract
+- POST /api/v1/structured-web/extract-html
+
+Paid endpoint:
+- POST /api/v1/lead-extract
+
 
 This repo now implements:
 
