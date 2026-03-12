@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+import logging
 import time
 from collections import deque
 from decimal import Decimal, InvalidOperation
@@ -14,6 +15,7 @@ from app.billing.verifiers.base import PaymentVerifier
 from app.config import get_settings
 
 TRANSFER_TOPIC = Web3.keccak(text="Transfer(address,address,uint256)").hex()
+logger = logging.getLogger("app.payment")
 
 
 class BaseUSDCOnchainVerifier(PaymentVerifier):
@@ -105,6 +107,26 @@ class BaseUSDCOnchainVerifier(PaymentVerifier):
                 return True
         return False
 
+    def _log_payment_outcome(self, *, event: str, outcome: str, reason: str, context: PaymentContext, proof: BaseUSDCOnchainProof | None = None, payment_format: str | None = None) -> None:
+        logger.info(
+            "%s request_id=%s endpoint=%s pricing_id=%s verifier=%s payment_format=%s path=%s method=%s payer_wallet=%s receiver_wallet=%s tx_hash=%s nonce=%s quote_id=%s reason=%s outcome=%s",
+            event,
+            context.request_id,
+            context.endpoint,
+            context.pricing_id,
+            self.name,
+            payment_format or (proof.version if proof else None),
+            context.path,
+            context.method,
+            proof.payer_wallet if proof else None,
+            proof.receiver_wallet if proof else context.requirement.receiver_wallet,
+            proof.tx_hash if proof else None,
+            proof.nonce if proof else None,
+            proof.quote_id if proof else None,
+            reason,
+            outcome,
+        )
+
     async def verify(self, context: PaymentContext, hard_enforcement: bool, shadow_mode: bool) -> PaymentDecision:
         requirement = context.requirement
         settings = get_settings()
@@ -123,6 +145,13 @@ class BaseUSDCOnchainVerifier(PaymentVerifier):
         proof_format = context.headers.get("x-payment-format", "")
         encoded_proof = context.headers.get("x-payment-proof", "") or context.headers.get("x-payment-prof", "")
         if not encoded_proof or proof_format != "base-usdc-onchain-v1":
+            self._log_payment_outcome(
+                event="payment_rejected",
+                outcome="rejected",
+                reason="missing_or_invalid_payment_headers",
+                context=context,
+                payment_format=proof_format or None,
+            )
             return PaymentDecision(
                 allowed=False if hard_enforcement else shadow_mode,
                 shadow_mode=shadow_mode,
@@ -140,6 +169,13 @@ class BaseUSDCOnchainVerifier(PaymentVerifier):
             raw = self._decode_proof(encoded_proof)
             proof = BaseUSDCOnchainProof(**raw)
         except Exception:
+            self._log_payment_outcome(
+                event="payment_rejected",
+                outcome="rejected",
+                reason="malformed_payment_proof",
+                context=context,
+                payment_format=proof_format or None,
+            )
             return PaymentDecision(
                 allowed=False if hard_enforcement else shadow_mode,
                 shadow_mode=shadow_mode,
@@ -214,6 +250,13 @@ class BaseUSDCOnchainVerifier(PaymentVerifier):
                                     self._order.append(("tx", proof.tx_hash.lower(), now))
                                     self._order.append(("nonce", proof.nonce, now))
                                     self._order.append(("quote", proof.quote_id, now))
+                                    self._log_payment_outcome(
+                                        event="payment_verified",
+                                        outcome="success",
+                                        reason="base_usdc_onchain_verified",
+                                        context=context,
+                                        proof=proof,
+                                    )
                                     return PaymentDecision(
                                         allowed=True,
                                         shadow_mode=shadow_mode,
@@ -236,6 +279,14 @@ class BaseUSDCOnchainVerifier(PaymentVerifier):
                     except Exception:
                         reason = "tx_receipt_missing"
 
+        self._log_payment_outcome(
+            event="payment_rejected",
+            outcome="rejected",
+            reason=reason,
+            context=context,
+            proof=locals().get("proof"),
+            payment_format=proof_format or (locals().get("proof").version if locals().get("proof") else None),
+        )
         return PaymentDecision(
             allowed=False if hard_enforcement else shadow_mode,
             shadow_mode=shadow_mode,

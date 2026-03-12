@@ -279,6 +279,139 @@ def test_valid_proof_succeeds(client):
     assert response.status_code == 200
 
 
+def test_successful_verification_emits_structured_success_log(client, caplog):
+    client.app.state.payment_shadow_mode = False
+    client.app.state.payment_hard_enforcement = True
+    client.app.state.payment_verifier = "base_usdc_onchain"
+    BaseUSDCOnchainVerifier._used_tx_hashes.clear()
+    BaseUSDCOnchainVerifier._used_nonces.clear()
+    BaseUSDCOnchainVerifier._used_quote_ids.clear()
+    BaseUSDCOnchainVerifier._order.clear()
+    proof = make_proof(tx_hash="0xlogsuccess", nonce="nonce-log-success", quote_id="quote-log-success")
+    with caplog.at_level("INFO", logger="app.payment"):
+        with patch("app.billing.verifiers.base_usdc_onchain.BaseUSDCOnchainVerifier._get_web3", return_value=FakeWeb3(receipt=FakeReceipt())):
+            response = client.post("/api/v1/lead-extract", headers={"X-Payment-Format": "base-usdc-onchain-v1", "X-Payment-Proof": proof}, json=valid_payload_json())
+    assert response.status_code == 200
+    message = next(record.message for record in caplog.records if "payment_verified" in record.message)
+    assert "request_id=" in message
+    assert "endpoint=lead_extract.html" in message
+    assert "pricing_id=lead_extract.html" in message
+    assert "verifier=base_usdc_onchain" in message
+    assert "payment_format=base-usdc-onchain-v1" in message
+    assert "path=/api/v1/lead-extract" in message
+    assert "method=POST" in message
+    assert f"payer_wallet={ACCOUNT.address}" in message
+    assert f"receiver_wallet={RECEIVER}" in message
+    assert "tx_hash=0xlogsuccess" in message
+    assert "nonce=nonce-log-success" in message
+    assert "quote_id=quote-log-success" in message
+    assert "reason=base_usdc_onchain_verified" in message
+    assert "outcome=success" in message
+    assert proof not in message
+    assert "wallet_signature" not in message
+    assert "hello@acme.com" not in message
+
+
+def test_replayed_tx_hash_emits_structured_rejection_log(client, caplog):
+    client.app.state.payment_shadow_mode = False
+    client.app.state.payment_hard_enforcement = True
+    client.app.state.payment_verifier = "base_usdc_onchain"
+    BaseUSDCOnchainVerifier._used_tx_hashes.clear()
+    BaseUSDCOnchainVerifier._used_nonces.clear()
+    BaseUSDCOnchainVerifier._used_quote_ids.clear()
+    BaseUSDCOnchainVerifier._order.clear()
+    proof = make_proof(tx_hash="0xlogreplay", nonce="nonce-log-replay", quote_id="quote-log-replay")
+    fake_web3 = FakeWeb3(receipt=FakeReceipt())
+    with caplog.at_level("INFO", logger="app.payment"):
+        with patch("app.billing.verifiers.base_usdc_onchain.BaseUSDCOnchainVerifier._get_web3", return_value=fake_web3):
+            first = client.post("/api/v1/lead-extract", headers={"X-Payment-Format": "base-usdc-onchain-v1", "X-Payment-Proof": proof}, json=valid_payload_json())
+            second = client.post("/api/v1/lead-extract", headers={"X-Payment-Format": "base-usdc-onchain-v1", "X-Payment-Proof": proof}, json=valid_payload_json())
+    assert first.status_code == 200
+    assert second.status_code == 402
+    message = next(record.message for record in caplog.records if "payment_rejected" in record.message and "reason=replayed_tx_hash" in record.message)
+    assert "request_id=" in message
+    assert "endpoint=lead_extract.html" in message
+    assert "pricing_id=lead_extract.html" in message
+    assert "verifier=base_usdc_onchain" in message
+    assert "payment_format=base-usdc-onchain-v1" in message
+    assert "path=/api/v1/lead-extract" in message
+    assert "method=POST" in message
+    assert f"payer_wallet={ACCOUNT.address}" in message
+    assert f"receiver_wallet={RECEIVER}" in message
+    assert "tx_hash=0xlogreplay" in message
+    assert "nonce=nonce-log-replay" in message
+    assert "quote_id=quote-log-replay" in message
+    assert "outcome=rejected" in message
+
+
+def test_replayed_nonce_emits_structured_rejection_log(client, caplog):
+    client.app.state.payment_shadow_mode = False
+    client.app.state.payment_hard_enforcement = True
+    client.app.state.payment_verifier = "base_usdc_onchain"
+    BaseUSDCOnchainVerifier._used_tx_hashes.clear()
+    BaseUSDCOnchainVerifier._used_nonces.clear()
+    BaseUSDCOnchainVerifier._used_quote_ids.clear()
+    BaseUSDCOnchainVerifier._order.clear()
+    fake_web3 = FakeWeb3(receipt=FakeReceipt())
+    proof1 = make_proof(tx_hash="0xlognonce1", nonce="dup-log-nonce", quote_id="quote-log-a")
+    proof2 = make_proof(tx_hash="0xlognonce2", nonce="dup-log-nonce", quote_id="quote-log-b")
+    with caplog.at_level("INFO", logger="app.payment"):
+        with patch("app.billing.verifiers.base_usdc_onchain.BaseUSDCOnchainVerifier._get_web3", return_value=fake_web3):
+            first = client.post("/api/v1/lead-extract", headers={"X-Payment-Format": "base-usdc-onchain-v1", "X-Payment-Proof": proof1}, json=valid_payload_json())
+            second = client.post("/api/v1/lead-extract", headers={"X-Payment-Format": "base-usdc-onchain-v1", "X-Payment-Proof": proof2}, json=valid_payload_json())
+    assert first.status_code == 200
+    assert second.status_code == 402
+    message = next(record.message for record in caplog.records if "payment_rejected" in record.message and "reason=replayed_nonce" in record.message)
+    assert "tx_hash=0xlognonce2" in message
+    assert "nonce=dup-log-nonce" in message
+    assert "quote_id=quote-log-b" in message
+    assert "path=/api/v1/lead-extract" in message
+    assert "method=POST" in message
+    assert "outcome=rejected" in message
+
+
+def test_replayed_quote_id_emits_structured_rejection_log(client, caplog):
+    client.app.state.payment_shadow_mode = False
+    client.app.state.payment_hard_enforcement = True
+    client.app.state.payment_verifier = "base_usdc_onchain"
+    BaseUSDCOnchainVerifier._used_tx_hashes.clear()
+    BaseUSDCOnchainVerifier._used_nonces.clear()
+    BaseUSDCOnchainVerifier._used_quote_ids.clear()
+    BaseUSDCOnchainVerifier._order.clear()
+    fake_web3 = FakeWeb3(receipt=FakeReceipt())
+    proof1 = make_proof(tx_hash="0xlogquote1", nonce="nonce-log-q1", quote_id="dup-log-quote")
+    proof2 = make_proof(tx_hash="0xlogquote2", nonce="nonce-log-q2", quote_id="dup-log-quote")
+    with caplog.at_level("INFO", logger="app.payment"):
+        with patch("app.billing.verifiers.base_usdc_onchain.BaseUSDCOnchainVerifier._get_web3", return_value=fake_web3):
+            first = client.post("/api/v1/lead-extract", headers={"X-Payment-Format": "base-usdc-onchain-v1", "X-Payment-Proof": proof1}, json=valid_payload_json())
+            second = client.post("/api/v1/lead-extract", headers={"X-Payment-Format": "base-usdc-onchain-v1", "X-Payment-Proof": proof2}, json=valid_payload_json())
+    assert first.status_code == 200
+    assert second.status_code == 402
+    message = next(record.message for record in caplog.records if "payment_rejected" in record.message and "reason=replayed_quote_id" in record.message)
+    assert "tx_hash=0xlogquote2" in message
+    assert "nonce=nonce-log-q2" in message
+    assert "quote_id=dup-log-quote" in message
+    assert "path=/api/v1/lead-extract" in message
+    assert "method=POST" in message
+    assert "outcome=rejected" in message
+
+
+def test_malformed_proof_rejection_log_excludes_sensitive_data(client, caplog):
+    client.app.state.payment_shadow_mode = False
+    client.app.state.payment_hard_enforcement = True
+    client.app.state.payment_verifier = "base_usdc_onchain"
+    with caplog.at_level("INFO", logger="app.payment"):
+        response = client.post("/api/v1/lead-extract", headers={"X-Payment-Format": "base-usdc-onchain-v1", "X-Payment-Proof": "bad"}, json=valid_payload_json())
+    assert response.status_code == 402
+    message = next(record.message for record in caplog.records if "payment_rejected" in record.message and "reason=malformed_payment_proof" in record.message)
+    assert "payment_format=base-usdc-onchain-v1" in message
+    assert "path=/api/v1/lead-extract" in message
+    assert "method=POST" in message
+    assert "wallet_signature" not in message
+    assert "hello@acme.com" not in message
+    assert "bad" not in message
+
+
 def test_free_endpoint_still_works_without_payment(client):
     client.app.state.payment_shadow_mode = False
     client.app.state.payment_hard_enforcement = True
