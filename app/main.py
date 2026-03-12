@@ -7,6 +7,8 @@ from fastapi.responses import JSONResponse
 
 from app.api.health import router as health_router
 from app.api.v1.lead_extract import router as lead_extract_router
+from app.api.v1.payment import router as payment_router
+from app.api.v1.pricing import router as pricing_router
 from app.api.v1.search import router as search_router
 from app.api.v1.structured_web import router as structured_web_router
 from app.config import get_settings
@@ -54,6 +56,8 @@ app.include_router(health_router)
 app.include_router(structured_web_router)
 app.include_router(lead_extract_router)
 app.include_router(search_router)
+app.include_router(pricing_router)
+app.include_router(payment_router)
 
 
 @app.exception_handler(AppError)
