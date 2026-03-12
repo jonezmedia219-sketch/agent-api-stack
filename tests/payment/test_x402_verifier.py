@@ -7,7 +7,7 @@ import time
 from app.billing.verifiers.x402 import X402PaymentVerifier
 
 RECEIVER = "0xa850773dDdAc7051c9434E3b1e804531C12d265c"
-SECRET = "change-me-before-production"
+TEST_ONLY_SHARED_SECRET = "change-me-before-production"  # test-only placeholder aligned with default app config
 
 
 def make_proof(*, pricing_id="lead_extract.html", chain="base", token="USDC", receiver_wallet=RECEIVER, amount="0.01", method="POST", path="/api/v1/lead-extract", timestamp=None, nonce="nonce-123", tx_hash="0xabc", version="x402-base-usdc-v1"):
@@ -43,7 +43,7 @@ def make_proof(*, pricing_id="lead_extract.html", chain="base", token="USDC", re
         payload["nonce"],
         payload["amount"],
     ])
-    payload["signature"] = hmac.new(SECRET.encode("utf-8"), signing_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    payload["signature"] = hmac.new(TEST_ONLY_SHARED_SECRET.encode("utf-8"), signing_payload.encode("utf-8"), hashlib.sha256).hexdigest()
     encoded = base64.urlsafe_b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8").rstrip("=")
     return encoded
 

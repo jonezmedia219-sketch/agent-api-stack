@@ -10,8 +10,8 @@ from web3 import Web3
 
 from app.billing.verifiers.base_usdc_onchain import BaseUSDCOnchainVerifier
 
-PRIVATE_KEY = "0x59c6995e998f97a5a0044966f094538b2925f5b4b8d7a7c4f8f8f8f8f8f8f8f8"
-ACCOUNT = Account.from_key(PRIVATE_KEY)
+TEST_ONLY_PRIVATE_KEY = Account.create("agent-api-stack-test-only-base-usdc-onchain").key.hex()
+ACCOUNT = Account.from_key(TEST_ONLY_PRIVATE_KEY)
 RECEIVER = "0xa850773dDdAc7051c9434E3b1e804531C12d265c"
 TOKEN_CONTRACT = "0x833589fCD6EDB6E08f4c7C32D4f71b54bdA02913"
 TRANSFER_TOPIC = Web3.keccak(text="Transfer(address,address,uint256)").hex()
@@ -60,7 +60,7 @@ def make_proof(*, pricing_id="lead_extract.html", chain_id=8453, receiver_wallet
         payload["amount"],
         payload["tx_hash"],
     ])
-    signed = Account.sign_message(encode_defunct(text=message), PRIVATE_KEY)
+    signed = Account.sign_message(encode_defunct(text=message), TEST_ONLY_PRIVATE_KEY)
     payload["wallet_signature"] = signed.signature.hex()
     return base64.urlsafe_b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8").rstrip("=")
 

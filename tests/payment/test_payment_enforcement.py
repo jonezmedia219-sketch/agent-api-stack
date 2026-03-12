@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, patch
 from eth_account import Account
 from eth_account.messages import encode_defunct
 
-PRIVATE_KEY = "0x59c6995e998f97a5a0044966f094538b2925f5b4b8d7a7c4f8f8f8f8f8f8f8f8"
-ACCOUNT = Account.from_key(PRIVATE_KEY)
+TEST_ONLY_PRIVATE_KEY = Account.create("agent-api-stack-test-only-payment-enforcement").key.hex()
+ACCOUNT = Account.from_key(TEST_ONLY_PRIVATE_KEY)
 
 
 def canonical_body_bytes(payload: dict) -> bytes:
@@ -58,7 +58,7 @@ def make_proof(*, tx_hash="0xabc", nonce="nonce-1", quote_id="quote-1"):
         proof_payload["amount"],
         proof_payload["tx_hash"],
     ])
-    signed = Account.sign_message(encode_defunct(text=message), PRIVATE_KEY)
+    signed = Account.sign_message(encode_defunct(text=message), TEST_ONLY_PRIVATE_KEY)
     proof_payload["wallet_signature"] = signed.signature.hex()
     return base64.urlsafe_b64encode(json.dumps(proof_payload).encode("utf-8")).decode("utf-8").rstrip("=")
 
