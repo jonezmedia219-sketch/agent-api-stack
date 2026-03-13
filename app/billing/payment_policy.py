@@ -63,6 +63,28 @@ PAYMENT_POLICIES = {
         "receiver_wallet": "0xa850773dDdAc7051c9434E3b1e804531C12d265c",
         "amount": "0.20",
     },
+    "memory.store": {
+        "pricing_id": "memory.store",
+        "payment_required": False,
+        "payment_mode": "free",
+        "verifier": "stub",
+    },
+    "memory.search": {
+        "pricing_id": "memory.search",
+        "payment_required": True,
+        "payment_mode": "per_request",
+        "verifier": "base_usdc_onchain",
+        "chain": "base",
+        "token": "USDC",
+        "receiver_wallet": "0xa850773dDdAc7051c9434E3b1e804531C12d265c",
+        "amount": "0.001",
+    },
+    "memory.delete": {
+        "pricing_id": "memory.delete",
+        "payment_required": False,
+        "payment_mode": "free",
+        "verifier": "stub",
+    },
     "lead_extract.url": {
         "pricing_id": "lead_extract.url",
         "payment_required": True,

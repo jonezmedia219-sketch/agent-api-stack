@@ -13,6 +13,9 @@ _ENDPOINT_HTTP_MAP = {
     "company.enrich.deep": {"method": "POST", "path": "/api/v1/company-enrich/deep"},
     "company.enrich.batch": {"method": "POST", "path": "/api/v1/company-enrich/batch"},
     "company.enrich.deep.batch": {"method": "POST", "path": "/api/v1/company-enrich/deep/batch"},
+    "memory.store": {"method": "POST", "path": "/api/v1/memory/store"},
+    "memory.search": {"method": "POST", "path": "/api/v1/memory/search"},
+    "memory.delete": {"method": "POST", "path": "/api/v1/memory/delete"},
     "lead_extract.url": {"method": "POST", "path": "/api/v1/lead-extract"},
     "lead_extract.html": {"method": "POST", "path": "/api/v1/lead-extract"},
 }
