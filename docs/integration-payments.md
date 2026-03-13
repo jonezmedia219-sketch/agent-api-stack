@@ -16,12 +16,22 @@ This API exposes both free and paid endpoints.
 - `POST /api/v1/structured-web/extract`
 - `POST /api/v1/structured-web/extract-html`
 
-**Paid endpoint**
+**Paid endpoints**
 - `POST /api/v1/lead-extract`
+- `POST /api/v1/company-enrich`
+- `POST /api/v1/company-enrich/deep`
+- `POST /api/v1/company-enrich/batch`
+- `POST /api/v1/company-enrich/deep/batch`
 
 For `POST /api/v1/lead-extract`, the pricing identifier depends on request mode:
 - HTML body mode → `lead_extract.html`
 - URL mode → `lead_extract.url`
+
+Company enrichment pricing identifiers:
+- `POST /api/v1/company-enrich` → `company.enrich`
+- `POST /api/v1/company-enrich/deep` → `company.enrich.deep`
+- `POST /api/v1/company-enrich/batch` → `company.enrich.batch`
+- `POST /api/v1/company-enrich/deep/batch` → `company.enrich.deep.batch`
 
 Free endpoints do not require payment.
 
@@ -38,14 +48,55 @@ Structured extraction from a URL.
 #### `POST /api/v1/structured-web/extract-html`
 Structured extraction from raw HTML.
 
-### Paid endpoint
+### Paid endpoints
 
 #### `POST /api/v1/lead-extract`
 Lead/contact extraction from either:
 - raw HTML
 - a URL
 
-## 3. Pricing discovery
+#### `POST /api/v1/company-enrich`
+Single-domain homepage company enrichment.
+
+#### `POST /api/v1/company-enrich/deep`
+Single-domain multi-page company enrichment.
+
+#### `POST /api/v1/company-enrich/batch`
+Batch homepage company enrichment for up to 10 domains.
+
+#### `POST /api/v1/company-enrich/deep/batch`
+Batch deep company enrichment for up to 10 domains.
+
+## 3. Company enrichment ladder
+
+### `company.enrich`
+- endpoint: `POST /api/v1/company-enrich`
+- price: `0.02 USDC`
+- best for: quick cheap single-domain lookup
+
+### `company.enrich.deep`
+- endpoint: `POST /api/v1/company-enrich/deep`
+- price: `0.05 USDC`
+- best for: stronger emails, phones, key pages, and site signals
+
+### `company.enrich.batch`
+- endpoint: `POST /api/v1/company-enrich/batch`
+- price: `0.10 USDC`
+- best for: lower-cost workflow batch processing
+
+### `company.enrich.deep.batch`
+- endpoint: `POST /api/v1/company-enrich/deep/batch`
+- price: `0.20 USDC`
+- best for: premium workflow batch enrichment with richer recall
+
+## 4. Which endpoint should I use?
+
+- use `company-enrich` for quick cheap single-domain lookup
+- use `company-enrich/deep` when you need stronger emails/phones/pages/signals
+- use `company-enrich/batch` for list processing
+- use `company-enrich/deep/batch` for premium sales/research workflows
+
+## 5. Pricing discovery
 
 Use:
 - `GET /pricing`
@@ -71,12 +122,21 @@ Invoke-RestMethod `
   -Uri "https://YOUR_API_BASE_URL/pricing"
 ```
 
-## 4. Payment schema discovery
+## 6. Tool and payment schema discovery
 
 Use:
+- `GET /tools`
 - `GET /payment/schema`
 
-This endpoint is public and machine-readable. It tells clients:
+These endpoints are public and machine-readable.
+
+`GET /tools` tells clients:
+- which endpoints exist
+- expected input shapes
+- whether payment is required
+- canonical pricing IDs and payment formats
+
+`GET /payment/schema` tells clients:
 - the canonical production payment format
 - the canonical public headers
 - the signed message format
@@ -93,6 +153,7 @@ This endpoint is public and machine-readable. It tells clients:
 ### curl
 
 ```bash
+curl "https://YOUR_API_BASE_URL/tools"
 curl "https://YOUR_API_BASE_URL/payment/schema"
 ```
 
@@ -101,10 +162,14 @@ curl "https://YOUR_API_BASE_URL/payment/schema"
 ```powershell
 Invoke-RestMethod `
   -Method Get `
+  -Uri "https://YOUR_API_BASE_URL/tools"
+
+Invoke-RestMethod `
+  -Method Get `
   -Uri "https://YOUR_API_BASE_URL/payment/schema"
 ```
 
-## 5. Canonical payment headers
+## 7. Canonical payment headers
 
 For paid requests, send these headers:
 
@@ -113,7 +178,7 @@ For paid requests, send these headers:
 
 Use the canonical public headers above in client integrations.
 
-## 6. Exact proof flow
+## 8. Exact proof flow
 
 ### Step 1: discover pricing
 Call `GET /pricing` and find the entry for the endpoint you want to call.
@@ -146,7 +211,7 @@ Send the paid API request with:
 - `X-Payment-Format`
 - `X-Payment-Proof`
 
-## 7. Canonical signed message format
+## 9. Canonical signed message format
 
 The onchain verifier signs this exact pipe-delimited message shape:
 
@@ -160,7 +225,7 @@ Example shape:
 base-usdc-onchain-v1|8453|lead_extract.html|per_request|0xa850773dDdAc7051c9434E3b1e804531C12d265c|0x833589fCD6EDB6E08f4c7C32D4f71b54bdA02913|POST|/api/v1/lead-extract|<body_sha256>|<quote_id>|<nonce>|<timestamp>|0.01|<tx_hash>
 ```
 
-## 8. Replay warning
+## 10. Replay warning
 
 Proofs must be fresh.
 
@@ -171,7 +236,7 @@ Do not reuse the same:
 
 If you replay a proof, the server should reject it.
 
-## 9. Common 402 reasons
+## 11. Common 402 reasons
 
 Payment failures return:
 - HTTP `402`
@@ -201,7 +266,7 @@ Common reasons include:
 - `insufficient_confirmations` — transaction does not yet have enough confirmations
 - `insufficient_or_invalid_transfer` — receipt did not contain the expected transfer
 
-## 10. Minimal curl examples
+## 12. Minimal curl examples
 
 ### Free search endpoint
 
@@ -223,6 +288,12 @@ curl -X POST "https://YOUR_API_BASE_URL/api/v1/structured-web/extract-html" \
 curl "https://YOUR_API_BASE_URL/pricing"
 ```
 
+### Tool discovery
+
+```bash
+curl "https://YOUR_API_BASE_URL/tools"
+```
+
 ### Payment schema discovery
 
 ```bash
@@ -239,7 +310,47 @@ curl -X POST "https://YOUR_API_BASE_URL/api/v1/lead-extract" \
   -d '{"html":"<html><body><h1>Acme</h1><p>Email hello@acme.com</p></body></html>","source_url":"https://acme.com"}'
 ```
 
-## 11. Minimal PowerShell examples
+### Paid company enrichment
+
+```bash
+curl -X POST "https://YOUR_API_BASE_URL/api/v1/company-enrich" \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Format: base-usdc-onchain-v1" \
+  -H "X-Payment-Proof: <base64url-encoded-json>" \
+  -d '{"domain":"example.com"}'
+```
+
+### Paid deep company enrichment
+
+```bash
+curl -X POST "https://YOUR_API_BASE_URL/api/v1/company-enrich/deep" \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Format: base-usdc-onchain-v1" \
+  -H "X-Payment-Proof: <base64url-encoded-json>" \
+  -d '{"domain":"example.com"}'
+```
+
+### Paid batch company enrichment
+
+```bash
+curl -X POST "https://YOUR_API_BASE_URL/api/v1/company-enrich/batch" \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Format: base-usdc-onchain-v1" \
+  -H "X-Payment-Proof: <base64url-encoded-json>" \
+  -d '{"domains":["example.com","acme.co","stripe.com"]}'
+```
+
+### Paid deep batch company enrichment
+
+```bash
+curl -X POST "https://YOUR_API_BASE_URL/api/v1/company-enrich/deep/batch" \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Format: base-usdc-onchain-v1" \
+  -H "X-Payment-Proof: <base64url-encoded-json>" \
+  -d '{"domains":["example.com","acme.co","stripe.com"]}'
+```
+
+## 13. Minimal PowerShell examples
 
 ### Free search endpoint
 
@@ -272,6 +383,14 @@ Invoke-RestMethod `
   -Uri "https://YOUR_API_BASE_URL/pricing"
 ```
 
+### Tool discovery
+
+```powershell
+Invoke-RestMethod `
+  -Method Get `
+  -Uri "https://YOUR_API_BASE_URL/tools"
+```
+
 ### Payment schema discovery
 
 ```powershell
@@ -300,7 +419,7 @@ Invoke-RestMethod `
   -Body $body
 ```
 
-## 12. Example 402 response
+## 14. Example 402 response
 
 ```json
 {
@@ -327,17 +446,20 @@ Invoke-RestMethod `
 }
 ```
 
-## 13. Implementation notes for agents
+## 15. Implementation notes for agents
 
 Recommended client flow:
-1. call `/pricing`
-2. call `/payment/schema`
-3. build the exact request body
-4. compute the body hash
-5. submit payment on Base
-6. sign the canonical message
-7. attach canonical headers
-8. send the paid request
+1. call `/tools`
+2. call `/pricing`
+3. call `/payment/schema`
+4. choose shallow vs deep based on cost vs completeness
+5. choose single vs batch based on how many domains you need
+6. build the exact request body
+7. compute the body hash
+8. submit payment on Base
+9. sign the canonical message
+10. attach canonical headers
+11. send the paid request
 
 Important:
 - bind proof to the exact method, path, and body

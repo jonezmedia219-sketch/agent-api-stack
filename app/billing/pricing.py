@@ -1,6 +1,11 @@
 PRICING = {
     "structured_web.extract": {"pricing_id": "structured_web.extract"},
     "structured_web.extract_html": {"pricing_id": "structured_web.extract_html"},
+    "extract.page": {"pricing_id": "extract.page"},
+    "company.enrich": {"pricing_id": "company.enrich"},
+    "company.enrich.deep": {"pricing_id": "company.enrich.deep"},
+    "company.enrich.batch": {"pricing_id": "company.enrich.batch"},
+    "company.enrich.deep.batch": {"pricing_id": "company.enrich.deep.batch"},
     "lead_extract.url": {"pricing_id": "lead_extract.url"},
     "lead_extract.html": {"pricing_id": "lead_extract.html"},
     "search.query": {"pricing_id": "search.query"},

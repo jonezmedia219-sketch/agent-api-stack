@@ -8,6 +8,9 @@ from fastapi.responses import JSONResponse
 from app.api.agent_discovery import router as agent_discovery_router
 from app.api.health import router as health_router
 from app.api.root import router as root_router
+from app.api.tools import router as tools_router
+from app.api.v1.company_enrich import router as company_enrich_router
+from app.api.v1.extract_page import router as extract_page_router
 from app.api.v1.lead_extract import router as lead_extract_router
 from app.api.v1.payment import router as payment_router
 from app.api.v1.pricing import router as pricing_router
@@ -58,10 +61,13 @@ app.include_router(root_router)
 app.include_router(agent_discovery_router)
 app.include_router(health_router)
 app.include_router(structured_web_router)
+app.include_router(company_enrich_router)
+app.include_router(extract_page_router)
 app.include_router(lead_extract_router)
 app.include_router(search_router)
 app.include_router(pricing_router)
 app.include_router(payment_router)
+app.include_router(tools_router)
 
 
 @app.exception_handler(AppError)

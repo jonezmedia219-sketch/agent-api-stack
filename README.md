@@ -1,30 +1,35 @@
 # Agent-api-stack
 
-Agent-ready API stack with free tools, paid lead extraction, onchain Base USDC verification, and machine-readable pricing/payment discovery.
+Agent-ready API stack with free tools, paid lead extraction, paid company enrichment, onchain Base USDC verification, and machine-readable pricing/payment discovery.
 
 Live API: https://agent-api-stack.onrender.com/docs
 
 ## Try it now
 
-- Service discovery: GET /
-- Interactive docs: /docs
-- Pricing discovery: /pricing
-- Payment schema: /payment/schema
+- Service discovery: `GET /`
+- Interactive docs: `/docs`
+- Pricing discovery: `/pricing`
+- Payment schema: `/payment/schema`
+- Tool discovery: `/tools`
 
 Free endpoints:
-- GET /api/v1/search
-- POST /api/v1/structured-web/extract
-- POST /api/v1/structured-web/extract-html
+- `GET /api/v1/search`
+- `POST /api/v1/structured-web/extract`
+- `POST /api/v1/structured-web/extract-html`
 
-Paid endpoint:
-- POST /api/v1/lead-extract
-
+Paid endpoints:
+- `POST /api/v1/lead-extract`
+- `POST /api/v1/company-enrich`
+- `POST /api/v1/company-enrich/deep`
+- `POST /api/v1/company-enrich/batch`
+- `POST /api/v1/company-enrich/deep/batch`
 
 This repo now implements:
 
 - API #1: **Structured Web Data API**
 - API #2: **Contact / Lead Extraction API**
 - API #3: **Search Aggregation API**
+- API #4: **Company Enrichment API Family**
 
 It also includes a shared monetization-ready billing abstraction for:
 - pricing identifiers
@@ -36,10 +41,15 @@ It also includes a shared monetization-ready billing abstraction for:
 ## API endpoints
 
 - `GET /health`
+- `GET /api/v1/search`
 - `POST /api/v1/structured-web/extract`
 - `POST /api/v1/structured-web/extract-html`
 - `POST /api/v1/lead-extract`
-- `GET /api/v1/search`
+- `POST /api/v1/company-enrich`
+- `POST /api/v1/company-enrich/deep`
+- `POST /api/v1/company-enrich/batch`
+- `POST /api/v1/company-enrich/deep/batch`
+- `GET /tools`
 - `GET /docs`
 - `GET /pricing`
 - `GET /payment/schema`
@@ -47,9 +57,90 @@ It also includes a shared monetization-ready billing abstraction for:
 ## Developer docs and discovery
 
 - Interactive API docs: `/docs`
+- Tool discovery: `/tools`
 - Pricing discovery: `/pricing`
 - Payment schema discovery: `/payment/schema`
 - Integration guide: `docs/integration-payments.md`
+- Company enrichment guide: `docs/company-enrichment.md`
+
+## Company enrichment ladder
+
+### `POST /api/v1/company-enrich`
+Cheapest single-domain homepage enrichment.
+
+Use it for:
+- quick cheap single-domain lookup
+- homepage-derived company data
+- lowest-cost enrichment
+
+Pricing:
+- `company.enrich`
+- `0.02 USDC`
+
+### `POST /api/v1/company-enrich/deep`
+Premium single-domain multi-page enrichment.
+
+Use it for:
+- stronger emails, phone numbers, and page detection
+- richer site signals
+- multi-page `pages_analyzed`
+
+Pricing:
+- `company.enrich.deep`
+- `0.05 USDC`
+
+### `POST /api/v1/company-enrich/batch`
+Cheaper workflow batch for homepage enrichment.
+
+Use it for:
+- list processing
+- workflow batching
+- per-item results without failing the full request
+
+Pricing:
+- `company.enrich.batch`
+- `0.10 USDC`
+- up to 10 domains per request
+
+### `POST /api/v1/company-enrich/deep/batch`
+Premium workflow batch for richer enrichment.
+
+Use it for:
+- premium sales/research workflows
+- deeper multi-domain enrichment
+- stronger recall/completeness across multiple domains
+
+Pricing:
+- `company.enrich.deep.batch`
+- `0.20 USDC`
+- up to 10 domains per request
+
+## Which endpoint should I use?
+
+- Use `company-enrich` for quick cheap single-domain lookup.
+- Use `company-enrich/deep` when you need stronger emails, phones, key pages, and signals.
+- Use `company-enrich/batch` for homepage-level list processing.
+- Use `company-enrich/deep/batch` for premium sales and research workflows.
+
+## Pricing table
+
+| Pricing ID | Endpoint | Method | Price |
+|---|---|---|---:|
+| `company.enrich` | `/api/v1/company-enrich` | `POST` | `0.02 USDC` |
+| `company.enrich.deep` | `/api/v1/company-enrich/deep` | `POST` | `0.05 USDC` |
+| `company.enrich.batch` | `/api/v1/company-enrich/batch` | `POST` | `0.10 USDC` |
+| `company.enrich.deep.batch` | `/api/v1/company-enrich/deep/batch` | `POST` | `0.20 USDC` |
+
+## Agent-oriented guidance
+
+For autonomous clients and agent builders:
+
+- discover endpoints with `GET /tools`
+- discover prices with `GET /pricing`
+- discover payment format with `GET /payment/schema`
+- use batch endpoints for multiple domains
+- prefer shallow endpoints when cost matters most
+- prefer deep endpoints when recall and completeness matter most
 
 ## What the Structured Web Data API returns
 
@@ -75,6 +166,27 @@ Given a URL or raw HTML, the lead extraction API extracts:
 - `company_name`
 - `contact_forms_detected`
 - `addresses`
+
+## What the Company Enrichment API returns
+
+The company enrichment endpoints return company-level structured data such as:
+
+- `domain`
+- `normalized_url`
+- `company_name`
+- `summary`
+- `industry`
+- `emails`
+- `phone_numbers`
+- `social_links`
+- `contact_page`
+- `about_page`
+- `careers_page`
+- `pricing_page`
+- `important_links`
+- `addresses`
+- `signals.has_careers_page`
+- `pages_analyzed`
 
 ## What the Search Aggregation API returns
 
@@ -107,34 +219,13 @@ agent-api-stack/
 │  ├─ exceptions.py
 │  ├─ api/
 │  │  ├─ health.py
-│  │  └─ v1/structured_web.py
+│  │  └─ v1/
 │  ├─ core/
-│  │  ├─ http_client.py
-│  │  ├─ html_utils.py
-│  │  ├─ metadata_utils.py
-│  │  ├─ response_builders.py
-│  │  ├─ text_utils.py
-│  │  ├─ url_utils.py
-│  │  └─ validators.py
 │  ├─ middleware/
-│  │  ├─ access_log.py
-│  │  ├─ metering.py
-│  │  ├─ payment_stub.py
-│  │  └─ request_id.py
 │  ├─ models/
-│  │  ├─ common.py
-│  │  └─ structured_web.py
 │  ├─ services/
-│  │  └─ structured_web/
-│  │     ├─ cleaner.py
-│  │     ├─ detectors.py
-│  │     ├─ extractor.py
-│  │     └─ service.py
 │  └─ billing/
-│     ├─ metering.py
-│     ├─ models.py
-│     ├─ payment_hooks.py
-│     └─ pricing.py
+├─ docs/
 ├─ tests/
 ├─ Dockerfile
 ├─ docker-compose.yml
@@ -199,6 +290,46 @@ curl -X POST http://localhost:8000/api/v1/lead-extract \
   -d '{"html": "<html><body><h1>Acme</h1><p>Email hello@acme.com</p></body></html>", "source_url": "https://acme.com"}'
 ```
 
+### Company enrich
+
+```bash
+curl -X POST http://localhost:8000/api/v1/company-enrich \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Format: base-usdc-onchain-v1" \
+  -H "X-Payment-Proof: <base64url-encoded-json>" \
+  -d '{"domain": "example.com"}'
+```
+
+### Company enrich deep
+
+```bash
+curl -X POST http://localhost:8000/api/v1/company-enrich/deep \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Format: base-usdc-onchain-v1" \
+  -H "X-Payment-Proof: <base64url-encoded-json>" \
+  -d '{"domain": "example.com"}'
+```
+
+### Company enrich batch
+
+```bash
+curl -X POST http://localhost:8000/api/v1/company-enrich/batch \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Format: base-usdc-onchain-v1" \
+  -H "X-Payment-Proof: <base64url-encoded-json>" \
+  -d '{"domains": ["example.com", "acme.co", "stripe.com"]}'
+```
+
+### Company enrich deep batch
+
+```bash
+curl -X POST http://localhost:8000/api/v1/company-enrich/deep/batch \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Format: base-usdc-onchain-v1" \
+  -H "X-Payment-Proof: <base64url-encoded-json>" \
+  -d '{"domains": ["example.com", "acme.co", "stripe.com"]}'
+```
+
 ### Search query
 
 ```bash
@@ -251,7 +382,14 @@ Agents call:
 - `POST /api/v1/structured-web/extract`
 - `POST /api/v1/structured-web/extract-html`
 - `POST /api/v1/lead-extract`
+- `POST /api/v1/company-enrich`
+- `POST /api/v1/company-enrich/deep`
+- `POST /api/v1/company-enrich/batch`
+- `POST /api/v1/company-enrich/deep/batch`
 - `GET /api/v1/search`
+- `GET /tools`
+- `GET /pricing`
+- `GET /payment/schema`
 - `GET /docs`
 
 ## Safety guards
